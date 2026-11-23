@@ -16,7 +16,7 @@ import { parseShortcutCommand } from "shared/utils/keybind";
 // eslint-disable-next-line no-duplicate-imports
 import { CommandLine } from "./cli";
 import { DATA_DIR } from "./constants";
-import { createFirstLaunchTour } from "./firstLaunch";
+import "./firstLaunch";
 import { initSocket } from "./ipcSocket";
 import { initKeybinds, runShortcutCommand } from "./keybinds";
 import { createWindows, mainWin, openDeepLink } from "./mainWindow";
@@ -152,10 +152,10 @@ if (!app.requestSingleInstanceLock({ IS_DEV, runShortcut })) {
 
 async function bootstrap() {
     if (!Object.hasOwn(State.store, "firstLaunch")) {
-        createFirstLaunchTour();
-    } else {
-        createWindows();
+        State.store.firstLaunch = false;
+        Settings.store.discordBranch = "stable";
     }
+    createWindows();
 }
 
 // MacOS only event

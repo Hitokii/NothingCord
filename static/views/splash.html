@@ -26,21 +26,47 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            border-radius: 8px;
-            border: 1px solid var(--fg-semi-trans);
-            background: var(--bg);
+            border-radius: 28px;
+            border: 1px solid #2a2a2a;
+            background: #000 radial-gradient(#2a2a2a 1px, transparent 1.5px) 0 0 / 14px 14px;
+            color: #f2f2f2;
+            font-family: "Space Mono", monospace;
         }
 
         .message {
-            top: 70%;
+            top: 78%;
             word-break: break-word;
             padding: 0 16px;
             position: absolute;
-            font-size: 14px;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #8c8c8c;
         }
 
         p {
             text-align: center;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin: 14px 0 0;
+        }
+
+        p.title::after {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-left: 10px;
+            border-radius: 50%;
+            background: #d71921;
+            animation: blink 1s steps(2) infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
         }
 
         img {
@@ -58,7 +84,7 @@
 <body>
     <div class="wrapper">
         <img draggable="false" src="vesktop://assets/splash" alt="" role="presentation" />
-        <p>Loading Vesktop...</p>
+        <p class="title">NothingCord</p>
         <p class="message"></p>
     </div>
 </body>
