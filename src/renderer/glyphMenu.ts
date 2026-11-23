@@ -63,12 +63,23 @@ const css = `
 [class*="panels_"] > div:last-child { top: 0 !important; bottom: auto !important; left: 72px !important; height: 30px !important; width: 300px !important; max-width: none; border: 0 !important; background: transparent !important; border-radius: 0 !important; display: flex !important; align-items: center; z-index: 100; }
 [class*="panels_"] > div:last-child * { min-height: 0 !important; }
 [class*="panels_"] > div:last-child > * { flex: 1; width: 100% !important; height: 28px !important; padding: 0 4px !important; margin: 0 !important; display: flex !important; align-items: center; background: transparent !important; }
-[class*="panels_"] > div:last-child [class*="avatarWrapper_"] { flex: 1 1 auto !important; min-width: 140px !important; width: auto !important; }
-[class*="panels_"] > div:last-child [class*="nameTag_"], [class*="panels_"] > div:last-child [class*="panelTitle_"] { overflow: visible !important; max-width: none !important; }
-[class*="panels_"] > div:last-child [class*="avatarWrapper_"] { padding: 0 6px !important; margin: 0 !important; }
+[class*="panels_"] > div:last-child { width: auto !important; }
+[class*="panels_"] > div:last-child > * { flex: none !important; width: auto !important; }
+/* profile is a shortcut (Alt+P): keep the clickable avatar in the DOM but invisible */
+[class*="panels_"] > div:last-child [class*="avatarWrapper_"] { position: absolute !important; left: 72px; top: 0; width: 1px !important; height: 1px !important; min-width: 0 !important; padding: 0 !important; opacity: 0; overflow: hidden; pointer-events: none; }
+/* now playing widget */
+#nc-now { position: fixed; top: 0; left: 290px; height: 30px; z-index: 100; display: none; align-items: center; gap: 10px; max-width: 420px; font-family: "Space Mono", monospace; font-size: 11px; letter-spacing: .06em; color: #f2f2f2; pointer-events: none; }
+#nc-now.on { display: flex; }
+#nc-now .nc-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
+#nc-now .nc-title i { font-style: normal; color: #8c8c8c; margin-left: 6px; }
+#nc-now .nc-eq { display: flex; align-items: flex-end; gap: 2px; height: 14px; flex: none; }
+#nc-now .nc-eq b { width: 3px; background: #d71921; border-radius: 1px; height: 4px; animation: nc-eq 0.9s ease-in-out infinite; }
+#nc-now .nc-eq b:nth-child(2) { animation-delay: -.2s; animation-duration: .7s; } #nc-now .nc-eq b:nth-child(3) { animation-delay: -.5s; animation-duration: 1.1s; }
+#nc-now .nc-eq b:nth-child(4) { animation-delay: -.35s; animation-duration: .8s; } #nc-now .nc-eq b:nth-child(5) { animation-delay: -.1s; animation-duration: 1s; }
+@keyframes nc-eq { 0%, 100% { height: 3px; } 50% { height: 14px; } }
+#vc-spotify-player { display: none !important; }
 [class*="panels_"] > div:last-child img, [class*="panels_"] > div:last-child svg { max-height: 24px; }
-/* music player: title bar, left of the centre title */
-#vc-spotify-player { top: 0 !important; bottom: auto !important; left: 400px !important; transform: none; height: 30px; width: 340px !important; display: flex !important; align-items: center; padding: 0 10px !important; gap: 10px; border: 0 !important; background: transparent !important; border-radius: 0 !important; }
+/* (Vencord's own spotify player is replaced by #nc-now) */
 
 /* Right-hand panels (members, search, threads, pins, inbox): Nothing look */
 [class*="membersWrap_"] { background: #000 !important; border-left: 1px solid #2a2a2a !important; min-width: 240px; }
@@ -371,10 +382,40 @@ function init() {
     style.id = "nothingcord-menu-css";
     style.textContent = css;
     (document.head ?? document.documentElement).append(style);
+    const now = document.createElement("div");
+    now.id = "nc-now";
+    now.innerHTML = '<span class="nc-eq"><b></b><b></b><b></b><b></b><b></b></span><span class="nc-title"></span>';
+    (document.body ?? document.documentElement).append(now);
+    const tick = () => {
+        try {
+            const { PresenceStore, UserStore } = C();
+            const me = UserStore?.getCurrentUser?.();
+            const acts: any[] = (me && PresenceStore?.getActivities?.(me.id)) ?? [];
+            const a = acts.find(x => x.type === 2);
+            const t = now.querySelector(".nc-title")!;
+            if (a) {
+                t.innerHTML = "";
+                t.append(a.details ?? a.name ?? "");
+                if (a.state) {
+                    const i = document.createElement("i");
+                    i.textContent = "— " + a.state;
+                    t.append(i);
+                }
+            }
+            now.classList.toggle("on", !!a);
+        } catch {}
+    };
+    setInterval(tick, 3000);
     const menu = new Menu();
     window.addEventListener(
         "keydown",
         e => {
+            if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === "p") {
+                document.querySelector<HTMLElement>('[class*="panels_"] > div:last-child [class*="avatarWrapper_"]')?.click();
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
             if (menu.key(e)) {
                 e.preventDefault();
                 e.stopPropagation();
