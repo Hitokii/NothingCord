@@ -1,114 +1,231 @@
 /*
- * NothingCord - Nothing OS inspired theme
+ * NothingCord - Glyph / Nothing OS inspired theme
+ * Palette and type roles follow Nebelung-cloud/glyph-rice:
+ * black, white dots, one red; Doto for numbers/short titles,
+ * Space Grotesk for UI, Space Mono for small caps labels.
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 const css = `
-@import url("https://fonts.googleapis.com/css2?family=Doto:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Doto:wght@500;800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
 
 :root, .theme-dark, .theme-light, .theme-darker, .theme-midnight {
-    --nothing-red: #d71921;
-    --nothing-black: #000000;
-    --nothing-surface: #0a0a0a;
-    --nothing-surface-2: #141414;
-    --nothing-line: #2a2a2a;
-    --nothing-white: #ffffff;
-    --nothing-grey: #8a8a8a;
-    --nothing-radius: 20px;
+    --g-0: #000000;
+    --g-1: #0e0e0e;
+    --g-2: #1a1a1a;
+    --g-3: #2a2a2a;
+    --g-4: #4a4a4a;
+    --g-5: #8c8c8c;
+    --g-6: #f2f2f2;
+    --g-red: #d71921;
+    --g-ui: "Space Grotesk", system-ui, sans-serif;
+    --g-mono: "Space Mono", ui-monospace, monospace;
+    --g-dot: "Doto", "Space Mono", monospace;
 
-    --brand-500: var(--nothing-red);
-    --brand-460: #e12a32;
+    --font-primary: var(--g-ui);
+    --font-display: var(--g-ui);
+    --font-headline: var(--g-ui);
+    --font-code: var(--g-mono);
+
+    --brand-experiment: var(--g-red);
+    --brand-500: var(--g-red);
+    --brand-460: #e8333b;
     --brand-530: #b8141b;
     --brand-560: #9c1017;
-    --background-primary: var(--nothing-black);
-    --background-secondary: var(--nothing-surface);
-    --background-secondary-alt: var(--nothing-surface);
-    --background-tertiary: var(--nothing-black);
-    --background-floating: var(--nothing-surface-2);
-    --background-base-lowest: var(--nothing-black);
-    --background-base-lower: var(--nothing-black);
-    --background-base-low: var(--nothing-surface);
-    --background-surface-high: var(--nothing-surface-2);
-    --chat-background-default: var(--nothing-black);
-    --channeltextarea-background: var(--nothing-surface-2);
-    --text-normal: var(--nothing-white);
-    --text-muted: var(--nothing-grey);
-    --header-primary: var(--nothing-white);
-    --header-secondary: var(--nothing-grey);
-    --interactive-normal: var(--nothing-grey);
-    --interactive-hover: var(--nothing-white);
-    --interactive-active: var(--nothing-white);
-    --text-link: var(--nothing-white);
-    --scrollbar-thin-thumb: var(--nothing-line);
-    --scrollbar-auto-thumb: var(--nothing-line);
+    --bg-brand: var(--g-red);
+    --text-brand: var(--g-red);
+    --button-filled-brand-background: var(--g-6);
+    --button-filled-brand-background-hover: #ffffff;
+    --button-filled-brand-background-active: var(--g-5);
+    --button-filled-brand-text: var(--g-0);
+    --focus-primary: var(--g-6);
+    --text-link: var(--g-6);
+
+    --background-primary: var(--g-0);
+    --background-secondary: var(--g-0);
+    --background-secondary-alt: var(--g-0);
+    --background-tertiary: var(--g-0);
+    --background-floating: var(--g-1);
+    --background-accent: var(--g-2);
+    --background-base-lowest: var(--g-0);
+    --background-base-lower: var(--g-0);
+    --background-base-low: var(--g-0);
+    --background-surface-high: var(--g-1);
+    --background-surface-higher: var(--g-2);
+    --background-surface-highest: var(--g-3);
+    --background-mod-subtle: var(--g-1);
+    --background-mod-normal: var(--g-2);
+    --background-mod-strong: var(--g-3);
+    --background-modifier-hover: var(--g-1);
+    --background-modifier-selected: var(--g-2);
+    --background-modifier-active: var(--g-2);
+    --chat-background-default: var(--g-0);
+    --channeltextarea-background: var(--g-1);
+    --input-background: var(--g-1);
+    --modal-background: var(--g-1);
+    --home-background: var(--g-0);
+    --border-subtle: var(--g-3);
+    --border-normal: var(--g-3);
+    --border-strong: var(--g-4);
+
+    --text-default: var(--g-6);
+    --text-normal: var(--g-6);
+    --text-strong: #ffffff;
+    --text-muted: var(--g-5);
+    --text-subtle: var(--g-5);
+    --header-primary: #ffffff;
+    --header-secondary: var(--g-5);
+    --interactive-normal: var(--g-5);
+    --interactive-hover: var(--g-6);
+    --interactive-active: #ffffff;
+    --interactive-muted: var(--g-4);
+
+    --scrollbar-thin-thumb: var(--g-3);
+    --scrollbar-auto-thumb: var(--g-3);
     --scrollbar-auto-track: transparent;
-    --font-primary: "Space Mono", monospace;
-    --font-display: "Doto", "Space Mono", monospace;
+    --scrollbar-thin-track: transparent;
+
+    --status-online: var(--g-6);
+    --status-idle: var(--g-5);
+    --status-dnd: var(--g-red);
+    --status-offline: var(--g-4);
+    --status-danger: var(--g-red);
+    --button-danger-background: var(--g-red);
+    --button-danger-background-hover: #b8141b;
+    --mention-foreground: var(--g-0);
+    --mention-background: var(--g-6);
+    --message-reacted-background: var(--g-2);
+    --message-reacted-border: var(--g-red);
 }
 
-body, #app-mount, [class*="app_"], [class*="bg_"] {
-    background: var(--nothing-black) !important;
-    font-family: "Space Mono", monospace !important;
+html, body, #app-mount {
+    background: var(--g-0) !important;
+    font-family: var(--g-ui) !important;
+    letter-spacing: 0;
 }
 
-h1, h2, h3, [class*="title_"], [class*="header_"] [class*="name_"] {
-    font-family: "Doto", "Space Mono", monospace !important;
-    font-weight: 900 !important;
-    letter-spacing: 0.04em;
+/* Titles: Doto for a dot-matrix feel, kept large enough to read */
+h1, [class*="headerText_"] {
+    font-family: var(--g-dot) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.02em;
 }
 
-[class*="guilds_"], [class*="sidebar_"], [class*="panels_"], [class*="members_"] {
-    background: var(--nothing-surface) !important;
-    border-color: var(--nothing-line) !important;
-}
-
-[class*="chatContent_"] [class*="scrollerInner_"] [class*="message_"]:hover {
-    background: var(--nothing-surface) !important;
-}
-
-[class*="channelTextArea_"], [class*="searchBar_"], input, textarea,
-[class*="inputDefault_"], [class*="searchBarComponent_"] {
-    border-radius: var(--nothing-radius) !important;
-    border: 1px solid var(--nothing-line) !important;
-    background: var(--nothing-surface-2) !important;
-}
-
-[class*="wrapper_"] > [class*="childWrapper_"], [class*="avatar_"], [class*="icon_"] img,
-[class*="guildIcon_"], img[class*="avatar"] {
-    border-radius: 50% !important;
-}
-
-button, [class*="button_"], [class*="lookFilled_"], [class*="lookOutlined_"] {
-    border-radius: 999px !important;
-    font-family: "Space Mono", monospace !important;
+/* Small labels: Space Mono caps */
+[class*="sectionTitle_"], [class*="eyebrow_"], [class*="privateChannelsHeaderContainer_"],
+[class*="membersGroup_"], [class*="statusText_"] {
+    font-family: var(--g-mono) !important;
     text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11px !important;
+    color: var(--g-5) !important;
+}
+
+/* Flat surfaces separated by hairlines instead of fills */
+[class*="sidebar_"], [class*="guilds_"], [class*="membersWrap_"] {
+    background: var(--g-0) !important;
+    border-color: var(--g-3) !important;
+}
+[class*="sidebar_"] { border-right: 1px solid var(--g-3) !important; }
+[class*="membersWrap_"] { border-left: 1px solid var(--g-3) !important; }
+[class*="searchBar_"] { background: var(--g-1) !important; }
+
+/* Channel / DM rows */
+[class*="interactive_"][class*="selected_"], [class*="modeSelected_"] {
+    background: var(--g-2) !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+}
+[class*="interactive_"]:hover {
+    background: var(--g-1) !important;
+    border-radius: 14px !important;
+}
+[class*="interactive_"][class*="selected_"] [class*="name_"],
+[class*="modeSelected_"] [class*="name_"] { color: #ffffff !important; }
+
+/* Server icons: round, red pip for the selected one */
+[class*="blobContainer_"], [class*="guildIcon_"] { border-radius: 50% !important; }
+[class*="pill_"] span { background: var(--g-red) !important; }
+
+/* Input: capsule */
+[class*="channelTextArea_"] {
+    border-radius: 999px !important;
+    background: var(--g-1) !important;
+    border: 1px solid var(--g-3) !important;
+}
+[class*="channelTextArea_"]:focus-within { border-color: var(--g-6) !important; }
+input, textarea, [class*="inputDefault_"] {
+    background: var(--g-1) !important;
+    border: 1px solid var(--g-3) !important;
+    border-radius: 14px !important;
+}
+input:focus, textarea:focus { border-color: var(--g-6) !important; }
+
+/* Buttons: white filled capsule, red only for danger */
+button[class*="lookFilled_"] {
+    border-radius: 999px !important;
+    font-family: var(--g-mono) !important;
+    font-weight: 700 !important;
     letter-spacing: 0.06em;
 }
-
-[class*="colorBrand_"], [class*="lookFilled_"][class*="colorBrand_"] {
-    background: var(--nothing-red) !important;
-    color: var(--nothing-white) !important;
+button[class*="colorBrand_"][class*="lookFilled_"] {
+    background: var(--g-6) !important;
+    color: var(--g-0) !important;
+}
+button[class*="colorBrand_"][class*="lookFilled_"]:hover { background: #ffffff !important; }
+button[class*="colorRed_"][class*="lookFilled_"] { background: var(--g-red) !important; color: #fff !important; }
+button[type="submit"][class*="lookFilled_"], button[class*="fullWidth"][class*="lookFilled_"] {
+    background: var(--g-6) !important;
+    color: var(--g-0) !important;
+}
+button[class*="lookOutlined_"], button[class*="lookInverted_"] {
+    border-radius: 999px !important;
+    border: 1px solid var(--g-4) !important;
+    background: transparent !important;
+    color: var(--g-6) !important;
 }
 
-[class*="modal_"], [class*="layer_"] [class*="container_"][role="dialog"], [class*="menu_"], [class*="popout_"] {
-    border-radius: var(--nothing-radius) !important;
-    border: 1px solid var(--nothing-line) !important;
-    background: var(--nothing-surface-2) !important;
+/* Friends tabs: pills, active one white */
+[class*="tabBar_"] [class*="item_"] { border-radius: 999px !important; }
+[class*="tabBar_"] [class*="item_"][aria-selected="true"] {
+    background: var(--g-6) !important;
+    color: var(--g-0) !important;
 }
 
-[class*="selected_"], [class*="modeSelected_"] {
-    background: var(--nothing-surface-2) !important;
-    box-shadow: inset 3px 0 0 var(--nothing-red);
+/* Popouts, menus, modals */
+[class*="menu_"], [class*="popout_"], [class*="layerContainer_"] [role="dialog"] {
+    background: var(--g-1) !important;
+    border: 1px solid var(--g-3) !important;
+    border-radius: 20px !important;
+    box-shadow: none !important;
 }
 
-[class*="numberBadge_"], [class*="mention_"] {
-    background: var(--nothing-red) !important;
-    color: var(--nothing-white) !important;
+/* Badges */
+[class*="numberBadge_"], [class*="lowerBadge_"] {
+    background: var(--g-red) !important;
+    color: #fff !important;
+    font-family: var(--g-dot) !important;
+    font-weight: 800;
 }
 
-[class*="status_"][class*="online"] { background: var(--nothing-white) !important; }
+/* Messages */
+[class*="message_"]:hover { background: var(--g-1) !important; }
+code, pre { font-family: var(--g-mono) !important; background: var(--g-1) !important; border-radius: 10px; }
+[class*="embedWrapper_"] { background: var(--g-1) !important; border-radius: 16px !important; border-color: var(--g-3) !important; }
 
-::-webkit-scrollbar-thumb { border-radius: 999px !important; background: var(--nothing-line) !important; }
+/* Voice / user panel */
+[class*="panels_"] > div { background: var(--g-1) !important; border-radius: 20px !important; border: 1px solid var(--g-3) !important; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 6px !important; }
+::-webkit-scrollbar-thumb { background: var(--g-3) !important; border-radius: 999px !important; border: 0 !important; }
+::-webkit-scrollbar-track { background: transparent !important; }
+
+/* Quiet dot-grid on the main content area */
+[class*="chatContent_"] {
+    background-image: radial-gradient(var(--g-2) 1px, transparent 1.2px);
+    background-size: 22px 22px;
+}
 `;
 
 function inject() {
