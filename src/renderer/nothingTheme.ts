@@ -1,10 +1,13 @@
 /*
+ * Vesktop, a desktop app aiming to give you a snappier Discord Experience
  * NothingCord - Glyph / Nothing OS inspired theme
  * Palette and type roles follow Nebelung-cloud/glyph-rice:
  * black, white dots, one red; Doto for numbers/short titles,
  * Space Grotesk for UI, Space Mono for small caps labels.
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
+
+export {};
 
 const css = `
 @import url("https://fonts.googleapis.com/css2?family=Doto:wght@500;800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");

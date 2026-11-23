@@ -1,0 +1,337 @@
+/*
+ * Vesktop, a desktop app aiming to give you a snappier Discord Experience
+ * NothingCord - keyboard-driven wheel menus (Glyph style)
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+export {};
+
+// Alt+S: servers (drops from the top), Alt+F: friends / DMs (rises from the bottom)
+
+interface Entry {
+    id: string;
+    name: string;
+    sub?: string;
+    dot?: "on" | "dnd" | "idle" | "off";
+    run: () => void;
+    open?: () => Entry[]; // drill-down: returns children instead of running
+}
+
+const css = `
+#nc-menu { position: fixed; left: 0; right: 0; z-index: 99999; display: flex; justify-content: center; pointer-events: none; }
+#nc-menu.top { top: 0; }
+#nc-menu.bottom { bottom: 0; }
+#nc-menu .nc-panel {
+    pointer-events: auto; width: min(760px, 92vw); background: #000; color: #f2f2f2;
+    border: 1px solid #2a2a2a; padding: 22px 28px 18px; transition: transform .38s cubic-bezier(.2,.8,.2,1), opacity .25s;
+    background-image: radial-gradient(#1a1a1a 1px, transparent 1.2px); background-size: 20px 20px;
+}
+#nc-menu.top .nc-panel { border-top: 0; border-radius: 0 0 32px 32px; transform: translateY(-110%); }
+#nc-menu.bottom .nc-panel { border-bottom: 0; border-radius: 32px 32px 0 0; transform: translateY(110%); }
+#nc-menu.open .nc-panel { transform: translateY(0); }
+#nc-menu .nc-head { display: flex; align-items: center; gap: 14px; font-family: "Space Mono", monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8c8c8c; }
+#nc-menu .nc-head .nc-title { color: #f2f2f2; }
+#nc-menu .nc-head .nc-count { margin-left: auto; font-family: "Doto", "Space Mono", monospace; font-weight: 800; font-size: 20px; letter-spacing: .04em; color: #f2f2f2; }
+#nc-menu input {
+    all: unset; box-sizing: border-box; width: 100%; margin: 14px 0 6px; padding: 10px 18px; border: 1px solid #2a2a2a; border-radius: 999px;
+    background: #0e0e0e; font-family: "Space Mono", monospace; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; caret-color: #d71921;
+}
+#nc-menu input:focus { border-color: #f2f2f2; }
+#nc-menu .nc-wheel { position: relative; height: 330px; overflow: hidden; -webkit-mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent); mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent); }
+#nc-menu .nc-row {
+    position: absolute; left: 0; right: 0; top: 50%; height: 80px; margin-top: -40px; display: flex; align-items: center; gap: 14px;
+    font-family: "Doto", "Space Mono", monospace; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: transform .3s cubic-bezier(.2,.8,.2,1), opacity .3s, font-size .3s, color .3s; cursor: pointer; transform-origin: left center;
+}
+#nc-menu .nc-row .nc-name { overflow: hidden; text-overflow: ellipsis; }
+#nc-menu .nc-row .nc-sub { font-family: "Space Mono", monospace; font-weight: 400; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8c8c8c; }
+#nc-menu .nc-row .nc-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: #4a4a4a; }
+#nc-menu .nc-row .nc-dot.on { background: #f2f2f2; } #nc-menu .nc-row .nc-dot.dnd { background: #d71921; } #nc-menu .nc-row .nc-dot.idle { background: #8c8c8c; }
+#nc-menu .nc-row.sel::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: #d71921; flex: none; }
+#nc-menu .nc-empty { position: absolute; inset: 0; display: grid; place-items: center; font-family: "Space Mono", monospace; font-size: 12px; letter-spacing: .1em; color: #4a4a4a; text-transform: uppercase; }
+#nc-menu .nc-foot { display: flex; gap: 18px; font-family: "Space Mono", monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4a; }
+
+/* Chat-first layout: no server rail, no channel sidebar, no member list */
+[class*="guilds_"], nav[aria-label][class*="wrapper_"], [class*="membersWrap_"] { display: none !important; }
+[class*="sidebar_"] { width: 0 !important; min-width: 0 !important; border: 0 !important; overflow: visible !important; }
+[class*="sidebar_"] > *:not([class*="panels_"]) { display: none !important; }
+[class*="panels_"] { position: fixed !important; left: 12px; bottom: 12px; width: 300px; z-index: 50; }
+`;
+
+const lazy = () => (window as any).Vencord?.Webpack;
+const C = (): any => lazy()?.Common ?? {};
+const fz = (s: string, q: string) => {
+    if (!q) return 1;
+    const l = s.toLowerCase();
+    const at = l.indexOf(q);
+    if (at >= 0) return 100 - at;
+    let i = 0;
+    for (const c of q) {
+        i = l.indexOf(c, i);
+        if (i < 0) return 0;
+        i++;
+    }
+    return 10;
+};
+
+const go = (path: string) => C().NavigationRouter?.transitionTo(path);
+
+function servers(): Entry[] {
+    const { GuildStore, GuildChannelStore } = C();
+    if (!GuildStore) return [];
+    const sorted = lazy()?.findStore?.("SortedGuildStore");
+    const ids: string[] = sorted?.getFlattenedGuildIds?.() ?? Object.keys(GuildStore.getGuilds());
+    const out: Entry[] = [
+        { id: "home", name: "Home", sub: "friends", run: () => go("/channels/@me") }
+    ];
+    for (const id of ids) {
+        const g = GuildStore.getGuild(id);
+        if (!g) continue;
+        out.push({
+            id,
+            name: g.name,
+            run: () => go(`/channels/${id}`),
+            open: () => {
+                const chans: any[] = GuildChannelStore.getSelectableChannels(id) ?? [];
+                return chans
+                    .map(c => c.channel ?? c)
+                    .filter(ch => [0, 2, 5, 13, 15].includes(ch.type))
+                    .map<Entry>(ch => ({
+                        id: ch.id,
+                        name: (ch.type === 2 || ch.type === 13 ? "~ " : "# ") + ch.name,
+                        sub: g.name,
+                        run: () => go(`/channels/${id}/${ch.id}`)
+                    }));
+            }
+        });
+    }
+    return out;
+}
+
+function friends(): Entry[] {
+    const { ChannelStore, UserStore, RelationshipStore, PresenceStore } = C();
+    if (!ChannelStore || !UserStore) return [];
+    const status = (uid?: string): Entry["dot"] => {
+        const s = uid && PresenceStore?.getStatus(uid);
+        return s === "online" ? "on" : s === "dnd" ? "dnd" : s === "idle" ? "idle" : "off";
+    };
+    const seen = new Set<string>();
+    const out: Entry[] = [];
+    for (const ch of ChannelStore.getSortedPrivateChannels?.() ?? []) {
+        const isGroup = ch.recipients?.length > 1;
+        const u = !isGroup && UserStore.getUser(ch.recipients?.[0]);
+        if (u) seen.add(u.id);
+        const name = isGroup
+            ? ch.name || ch.recipients.map((r: string) => UserStore.getUser(r)?.globalName ?? UserStore.getUser(r)?.username).join(", ")
+            : u?.globalName ?? u?.username ?? "unknown";
+        out.push({ id: ch.id, name, sub: isGroup ? "group" : u?.username, dot: u ? status(u.id) : undefined, run: () => go(`/channels/@me/${ch.id}`) });
+    }
+    for (const uid of RelationshipStore?.getFriendIDs?.() ?? []) {
+        if (seen.has(uid)) continue;
+        const u = UserStore.getUser(uid);
+        if (!u) continue;
+        out.push({
+            id: uid,
+            name: u.globalName ?? u.username,
+            sub: u.username,
+            dot: status(uid),
+            run: () => lazy()?.findByProps?.("openPrivateChannel")?.openPrivateChannel(uid)
+        });
+    }
+    return out;
+}
+
+class Menu {
+    root = document.createElement("div");
+    panel = document.createElement("div");
+    wheel = document.createElement("div");
+    input = document.createElement("input");
+    title = document.createElement("span");
+    count = document.createElement("span");
+    kind: "servers" | "friends" | null = null;
+    stack: Entry[][] = [];
+    items: Entry[] = [];
+    view: Entry[] = [];
+    sel = 0;
+
+    constructor() {
+        this.root.id = "nc-menu";
+        this.panel.className = "nc-panel";
+        const head = document.createElement("div");
+        head.className = "nc-head";
+        this.title.className = "nc-title";
+        this.count.className = "nc-count";
+        head.append(this.title, this.count);
+        this.wheel.className = "nc-wheel";
+        const foot = document.createElement("div");
+        foot.className = "nc-foot";
+        foot.textContent = "↑↓ move   ↵ open   ⌫ back   esc close";
+        this.input.placeholder = "search";
+        this.input.spellcheck = false;
+        this.panel.append(head, this.input, this.wheel, foot);
+        this.root.append(this.panel);
+        this.input.addEventListener("input", () => this.filter());
+        document.documentElement.append(this.root);
+    }
+
+    get isOpen() {
+        return this.root.classList.contains("open");
+    }
+
+    show(kind: "servers" | "friends") {
+        this.kind = kind;
+        this.root.className = (kind === "servers" ? "top" : "bottom") + " open";
+        this.title.textContent = kind === "servers" ? "servers" : "friends";
+        this.stack = [];
+        this.items = kind === "servers" ? servers() : friends();
+        this.input.value = "";
+        this.sel = 0;
+        this.filter();
+        setTimeout(() => this.input.focus(), 30);
+    }
+
+    hide() {
+        this.root.classList.remove("open");
+        this.input.blur();
+    }
+
+    filter() {
+        const q = this.input.value.trim().toLowerCase();
+        this.view = this.items
+            .map(e => ({ e, s: Math.max(fz(e.name, q), q ? fz(e.sub ?? "", q) / 2 : 0) }))
+            .filter(x => x.s > 0)
+            .sort((a, b) => (q ? b.s - a.s : 0))
+            .map(x => x.e);
+        this.sel = Math.min(this.sel, Math.max(0, this.view.length - 1));
+        this.render(true);
+    }
+
+    render(rebuild = false) {
+        if (rebuild) {
+            this.wheel.textContent = "";
+            if (!this.view.length) {
+                const e = document.createElement("div");
+                e.className = "nc-empty";
+                e.textContent = "nothing here";
+                this.wheel.append(e);
+            }
+            this.view.forEach((en, i) => {
+                const r = document.createElement("div");
+                r.className = "nc-row";
+                if (en.dot) {
+                    const d = document.createElement("span");
+                    d.className = "nc-dot " + en.dot;
+                    r.append(d);
+                }
+                const n = document.createElement("span");
+                n.className = "nc-name";
+                n.textContent = en.name;
+                r.append(n);
+                if (en.sub) {
+                    const s = document.createElement("span");
+                    s.className = "nc-sub";
+                    s.textContent = en.sub;
+                    r.append(s);
+                }
+                r.addEventListener("click", () => {
+                    this.sel = i;
+                    this.choose();
+                });
+                this.wheel.append(r);
+            });
+        }
+        const rows = Array.from(this.wheel.querySelectorAll<HTMLElement>(".nc-row"));
+        rows.forEach((r, i) => {
+            const d = i - this.sel;
+            const a = Math.abs(d);
+            r.classList.toggle("sel", d === 0);
+            r.style.transform = `translateY(${d * 62}px)`;
+            r.style.fontSize = a === 0 ? "52px" : a === 1 ? "30px" : "20px";
+            r.style.opacity = a === 0 ? "1" : a === 1 ? ".45" : a === 2 ? ".18" : "0";
+            r.style.color = a === 0 ? "#fff" : "#8c8c8c";
+            r.style.pointerEvents = a > 2 ? "none" : "auto";
+        });
+        const pad = (n: number) => String(n).padStart(2, "0");
+        this.count.textContent = this.view.length ? `${pad(this.sel + 1)}/${pad(this.view.length)}` : "00";
+    }
+
+    move(d: number) {
+        if (!this.view.length) return;
+        this.sel = (this.sel + d + this.view.length) % this.view.length;
+        this.render();
+    }
+
+    choose() {
+        const e = this.view[this.sel];
+        if (!e) return;
+        if (e.open) {
+            const kids = e.open();
+            if (kids.length) {
+                this.stack.push(this.items);
+                this.items = kids;
+                this.title.textContent = e.name;
+                this.input.value = "";
+                this.sel = 0;
+                this.filter();
+                return;
+            }
+        }
+        this.hide();
+        e.run();
+    }
+
+    back() {
+        const prev = this.stack.pop();
+        if (!prev) return this.hide();
+        this.items = prev;
+        this.title.textContent = this.kind === "servers" ? "servers" : "friends";
+        this.sel = 0;
+        this.filter();
+    }
+
+    key(e: KeyboardEvent): boolean {
+        if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === "s" || e.key === "f")) {
+            const kind = e.key === "s" ? "servers" : "friends";
+            if (this.isOpen && this.kind === kind) this.hide();
+            else this.show(kind);
+            return true;
+        }
+        if (!this.isOpen) return false;
+        switch (e.key) {
+            case "Escape": this.hide(); return true;
+            case "ArrowDown": this.move(1); return true;
+            case "ArrowUp": this.move(-1); return true;
+            case "Tab": this.move(e.shiftKey ? -1 : 1); return true;
+            case "Enter": this.choose(); return true;
+            case "Backspace":
+                if (!this.input.value) { this.back(); return true; }
+                return false;
+        }
+        return false;
+    }
+}
+
+function init() {
+    const style = document.createElement("style");
+    style.id = "nothingcord-menu-css";
+    style.textContent = css;
+    (document.head ?? document.documentElement).append(style);
+    const menu = new Menu();
+    window.addEventListener(
+        "keydown",
+        e => {
+            if (menu.key(e)) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        },
+        true
+    );
+}
+
+try {
+    if (document.documentElement) init();
+    else document.addEventListener("DOMContentLoaded", init, { once: true });
+} catch (e) {
+    console.error("[NothingCord] menu init failed", e);
+}

@@ -5,6 +5,7 @@
  */
 
 import "./nothingTheme";
+import "./glyphMenu";
 import "./themedSplash";
 import "./ipcCommands";
 import "./appBadge";
