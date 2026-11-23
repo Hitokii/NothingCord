@@ -60,8 +60,9 @@ const css = `
 /* voice connection: stays bottom-left */
 [class*="panels_"] > div { left: 12px; bottom: 80px; width: 280px; border-radius: 16px !important; }
 /* user profile (always the last panel): title bar, right after back/forward arrows */
-[class*="panels_"] > div:last-child { top: 1px !important; bottom: auto !important; left: 64px !important; height: 28px; width: auto !important; max-width: 300px; border-radius: 999px !important; display: flex; align-items: center; }
+[class*="panels_"] > div:last-child { top: 2px !important; bottom: auto !important; left: 76px !important; height: 28px !important; width: 250px !important; max-width: none; border-radius: 999px !important; display: flex !important; align-items: center; }
 [class*="panels_"] > div:last-child * { min-height: 0 !important; }
+[class*="panels_"] > div:last-child > * { flex: 1; width: 100% !important; height: 28px !important; padding: 0 4px !important; margin: 0 !important; display: flex !important; align-items: center; background: transparent !important; }
 [class*="panels_"] > div:last-child [class*="avatarWrapper_"] { padding: 0 6px !important; margin: 0 !important; }
 [class*="panels_"] > div:last-child img, [class*="panels_"] > div:last-child svg { max-height: 24px; }
 /* music player: title bar, left of the centre title */
@@ -358,6 +359,12 @@ class Menu {
 }
 
 function init() {
+    setTimeout(() => {
+        try {
+            const p = (window as any).Vencord?.Settings?.plugins?.SpotifyControls;
+            if (p && !p.enabled) p.enabled = true;
+        } catch {}
+    }, 6000);
     const style = document.createElement("style");
     style.id = "nothingcord-menu-css";
     style.textContent = css;
