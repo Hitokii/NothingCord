@@ -58,9 +58,9 @@
         "pnpm": ">=11"
     },
     "build": {
-        "appId": "dev.vencord.vesktop",
-        "productName": "Vesktop",
-        "executableName": "vesktop",
+        "appId": "dev.hitokii.nothingcord",
+        "productName": "NothingCord",
+        "executableName": "nothingcord",
         "files": [
             "!*",
             "!node_modules",
@@ -117,7 +117,7 @@
             ],
             "desktop": {
                 "entry": {
-                    "Name": "Vesktop",
+                    "Name": "NothingCord",
                     "GenericName": "Internet Messenger",
                     "Type": "Application",
                     "Categories": "Network;InstantMessaging;Chat;",
@@ -171,7 +171,9 @@
         },
         "nsis": {
             "include": "build/installer.nsh",
-            "oneClick": false
+            "oneClick": false,
+            "createStartMenuShortcut": true,
+            "shortcutName": "NothingCord"
         },
         "win": {
             "icon": "build/icon.ico",
