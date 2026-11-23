@@ -111,7 +111,17 @@ button, [class*="button_"], [class*="lookFilled_"], [class*="lookOutlined_"] {
 ::-webkit-scrollbar-thumb { border-radius: 999px !important; background: var(--nothing-line) !important; }
 `;
 
-const style = document.createElement("style");
-style.id = "nothingcord-theme";
-style.textContent = css;
-document.documentElement.appendChild(style);
+function inject() {
+    if (document.getElementById("nothingcord-theme")) return;
+    const style = document.createElement("style");
+    style.id = "nothingcord-theme";
+    style.textContent = css;
+    (document.head ?? document.documentElement).appendChild(style);
+}
+
+try {
+    if (document.head || document.documentElement) inject();
+    else document.addEventListener("DOMContentLoaded", inject, { once: true });
+} catch (e) {
+    console.error("[NothingCord] theme injection failed", e);
+}
