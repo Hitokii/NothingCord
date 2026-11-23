@@ -53,16 +53,18 @@ const css = `
 
 /* Chat-first layout: no server rail, no channel sidebar, no member list */
 [class*="guilds_"], nav[aria-label][class*="wrapper_"] { display: none !important; }
-[class*="sidebar_"] { width: 0 !important; min-width: 0 !important; border: 0 !important; overflow: visible !important; }
-[class*="sidebar_"] > *:not([class*="panels_"]) { display: none !important; }
+[class*="sidebar_"]:has(> [class*="panels_"]) { width: 0 !important; min-width: 0 !important; border: 0 !important; overflow: visible !important; }
+[class*="sidebar_"]:has(> [class*="panels_"]) > *:not([class*="panels_"]) { display: none !important; }
 [class*="panels_"] { display: contents !important; }
-[class*="panels_"] > div { position: fixed !important; z-index: 9999; background: #000 !important; border: 1px solid #2a2a2a !important; border-radius: 999px !important; margin: 0 !important; overflow: hidden; }
+[class*="panels_"] > div { position: fixed !important; z-index: 100; background: #000 !important; border: 1px solid #2a2a2a !important; border-radius: 999px !important; margin: 0 !important; overflow: hidden; }
 /* voice connection: stays bottom-left */
 [class*="panels_"] > div { left: 12px; bottom: 80px; width: 280px; border-radius: 16px !important; }
 /* user profile (always the last panel): title bar, right after back/forward arrows */
-[class*="panels_"] > div:last-child { top: 2px !important; bottom: auto !important; left: 76px !important; height: 28px !important; width: 250px !important; max-width: none; border-radius: 999px !important; display: flex !important; align-items: center; }
+[class*="panels_"] > div:last-child { top: 2px !important; bottom: auto !important; left: 76px !important; height: 28px !important; width: 300px !important; max-width: none; border-radius: 999px !important; display: flex !important; align-items: center; z-index: 100; }
 [class*="panels_"] > div:last-child * { min-height: 0 !important; }
 [class*="panels_"] > div:last-child > * { flex: 1; width: 100% !important; height: 28px !important; padding: 0 4px !important; margin: 0 !important; display: flex !important; align-items: center; background: transparent !important; }
+[class*="panels_"] > div:last-child [class*="avatarWrapper_"] { flex: 1 1 auto !important; min-width: 140px !important; width: auto !important; }
+[class*="panels_"] > div:last-child [class*="nameTag_"], [class*="panels_"] > div:last-child [class*="panelTitle_"] { overflow: visible !important; max-width: none !important; }
 [class*="panels_"] > div:last-child [class*="avatarWrapper_"] { padding: 0 6px !important; margin: 0 !important; }
 [class*="panels_"] > div:last-child img, [class*="panels_"] > div:last-child svg { max-height: 24px; }
 /* music player: title bar, left of the centre title */
