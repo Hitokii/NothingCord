@@ -60,7 +60,7 @@ const css = `
 /* voice connection: stays bottom-left */
 [class*="panels_"] > div { left: 12px; bottom: 80px; width: 280px; border-radius: 16px !important; }
 /* user profile (always the last panel): title bar, right after back/forward arrows */
-[class*="panels_"] > div:last-child { top: 2px !important; bottom: auto !important; left: 76px !important; height: 28px !important; width: 300px !important; max-width: none; border-radius: 999px !important; display: flex !important; align-items: center; z-index: 100; }
+[class*="panels_"] > div:last-child { top: 0 !important; bottom: auto !important; left: 72px !important; height: 30px !important; width: 300px !important; max-width: none; border: 0 !important; background: transparent !important; border-radius: 0 !important; display: flex !important; align-items: center; z-index: 100; }
 [class*="panels_"] > div:last-child * { min-height: 0 !important; }
 [class*="panels_"] > div:last-child > * { flex: 1; width: 100% !important; height: 28px !important; padding: 0 4px !important; margin: 0 !important; display: flex !important; align-items: center; background: transparent !important; }
 [class*="panels_"] > div:last-child [class*="avatarWrapper_"] { flex: 1 1 auto !important; min-width: 140px !important; width: auto !important; }
@@ -68,7 +68,7 @@ const css = `
 [class*="panels_"] > div:last-child [class*="avatarWrapper_"] { padding: 0 6px !important; margin: 0 !important; }
 [class*="panels_"] > div:last-child img, [class*="panels_"] > div:last-child svg { max-height: 24px; }
 /* music player: title bar, left of the centre title */
-#vc-spotify-player { top: 1px !important; bottom: auto !important; left: 400px !important; transform: none; height: 28px; width: 340px !important; display: flex !important; align-items: center; padding: 0 10px !important; gap: 10px; border-radius: 999px !important; }
+#vc-spotify-player { top: 0 !important; bottom: auto !important; left: 400px !important; transform: none; height: 30px; width: 340px !important; display: flex !important; align-items: center; padding: 0 10px !important; gap: 10px; border: 0 !important; background: transparent !important; border-radius: 0 !important; }
 
 /* Right-hand panels (members, search, threads, pins, inbox): Nothing look */
 [class*="membersWrap_"] { background: #000 !important; border-left: 1px solid #2a2a2a !important; min-width: 240px; }
