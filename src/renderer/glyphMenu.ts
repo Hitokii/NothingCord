@@ -52,18 +52,32 @@ const css = `
 #nc-menu .nc-foot { display: flex; gap: 18px; font-family: "Space Mono", monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4a; }
 
 /* Chat-first layout: no server rail, no channel sidebar, no member list */
-[class*="guilds_"], nav[aria-label][class*="wrapper_"], [class*="membersWrap_"] { display: none !important; }
+[class*="guilds_"], nav[aria-label][class*="wrapper_"] { display: none !important; }
 [class*="sidebar_"] { width: 0 !important; min-width: 0 !important; border: 0 !important; overflow: visible !important; }
 [class*="sidebar_"] > *:not([class*="panels_"]) { display: none !important; }
 [class*="panels_"] { display: contents !important; }
 [class*="panels_"] > div { position: fixed !important; z-index: 9999; background: #000 !important; border: 1px solid #2a2a2a !important; border-radius: 999px !important; margin: 0 !important; overflow: hidden; }
 /* voice connection: stays bottom-left */
-[class*="panels_"] > div:not(#vc-spotify-player):not(:has([class*="avatarWrapper_"])) { left: 12px; bottom: 12px; width: 280px; border-radius: 16px !important; }
-/* user profile: top bar, right after back/forward arrows */
-[class*="panels_"] > div:has([class*="avatarWrapper_"]) { top: 2px; left: 104px; height: 32px; width: 230px; display: flex; align-items: center; }
-[class*="panels_"] > div:has([class*="avatarWrapper_"]) > * { height: 32px; min-height: 0; padding: 0 6px; background: transparent !important; }
-/* music player: compact, top bar centre */
-#vc-spotify-player { top: 2px; left: 50%; transform: translateX(-50%); height: 32px; width: 420px; display: flex !important; align-items: center; padding: 0 10px !important; gap: 10px; }
+[class*="panels_"] > div { left: 12px; bottom: 80px; width: 280px; border-radius: 16px !important; }
+/* user profile (always the last panel): title bar, right after back/forward arrows */
+[class*="panels_"] > div:last-child { top: 1px !important; bottom: auto !important; left: 64px !important; height: 28px; width: auto !important; max-width: 300px; border-radius: 999px !important; display: flex; align-items: center; }
+[class*="panels_"] > div:last-child * { min-height: 0 !important; }
+[class*="panels_"] > div:last-child [class*="avatarWrapper_"] { padding: 0 6px !important; margin: 0 !important; }
+[class*="panels_"] > div:last-child img, [class*="panels_"] > div:last-child svg { max-height: 24px; }
+/* music player: title bar, left of the centre title */
+#vc-spotify-player { top: 1px !important; bottom: auto !important; left: 400px !important; transform: none; height: 28px; width: 340px !important; display: flex !important; align-items: center; padding: 0 10px !important; gap: 10px; border-radius: 999px !important; }
+
+/* Right-hand panels (members, search, threads, pins, inbox): Nothing look */
+[class*="membersWrap_"] { background: #000 !important; border-left: 1px solid #2a2a2a !important; min-width: 240px; }
+[class*="membersWrap_"] [class*="members_"] { background: transparent !important; }
+[class*="membersGroup_"] { font-family: "Space Mono", monospace !important; font-size: 10px !important; letter-spacing: .14em; text-transform: uppercase; color: #8c8c8c !important; }
+[class*="membersGroup_"]::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #d71921; margin-right: 8px; }
+[class*="membersWrap_"] [class*="member_"] { border-radius: 999px !important; margin: 1px 8px !important; }
+[class*="membersWrap_"] [class*="member_"]:hover { background: #1a1a1a !important; }
+[class*="membersWrap_"] [class*="name_"] { font-family: "Space Grotesk", sans-serif; color: #f2f2f2; }
+[class*="searchResultsWrap_"], [class*="threadSidebar_"], [class*="messagesPopoutWrap_"], [class*="popout_"], [class*="recentMentionsPopout_"] { background: #000 !important; border: 1px solid #2a2a2a !important; border-radius: 22px !important; box-shadow: 0 20px 60px rgba(0,0,0,.8) !important; overflow: hidden; }
+[class*="searchResultsWrap_"] [class*="header_"], [class*="messagesPopoutWrap_"] [class*="header_"], [class*="popout_"] [class*="header_"] { background: #0e0e0e !important; font-family: "Doto", "Space Mono", monospace !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid #2a2a2a !important; }
+[class*="searchResultsWrap_"] [class*="searchResult_"], [class*="messagesPopoutWrap_"] [class*="container_"] { background: #0e0e0e !important; border: 1px solid #2a2a2a !important; border-radius: 16px !important; }
 #vc-spotify-player img, #vc-spotify-player [class*="cover"] { width: 24px !important; height: 24px !important; border-radius: 50% !important; flex: none; }
 #vc-spotify-player [class*="progress"], #vc-spotify-player [class*="Progress"] { display: none !important; }
 #vc-spotify-player [class*="info"], #vc-spotify-player [class*="Info"] { flex: 1; min-width: 0; font-family: "Space Mono", monospace; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -114,15 +128,26 @@ function servers(): Entry[] {
             run: () => go(`/channels/${id}`),
             open: () => {
                 const chans: any[] = GuildChannelStore.getSelectableChannels(id) ?? [];
+                const have = new Set(chans.map(c => (c.channel ?? c).id));
+                for (const v of GuildChannelStore.getVocalChannelIds?.(id) ?? []) {
+                    const ch = C().ChannelStore?.getChannel(v);
+                    if (ch && !have.has(v)) chans.push(ch);
+                }
                 return chans
                     .map(c => c.channel ?? c)
                     .filter(ch => [0, 2, 5, 13, 15].includes(ch.type))
-                    .map<Entry>(ch => ({
-                        id: ch.id,
-                        name: (ch.type === 2 || ch.type === 13 ? "~ " : "# ") + ch.name,
-                        sub: g.name,
-                        run: () => go(`/channels/${id}/${ch.id}`)
-                    }));
+                    .map<Entry>(ch => {
+                        const voice = ch.type === 2 || ch.type === 13;
+                        return {
+                            id: ch.id,
+                            name: (voice ? "~ " : "# ") + ch.name,
+                            sub: voice ? `${g.name} · voice` : g.name,
+                            run: () => {
+                                go(`/channels/${id}/${ch.id}`);
+                                if (voice) lazy()?.findByProps?.("selectVoiceChannel")?.selectVoiceChannel(ch.id);
+                            }
+                        };
+                    });
             }
         });
     }
