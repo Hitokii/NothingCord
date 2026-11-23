@@ -55,7 +55,28 @@ const css = `
 [class*="guilds_"], nav[aria-label][class*="wrapper_"], [class*="membersWrap_"] { display: none !important; }
 [class*="sidebar_"] { width: 0 !important; min-width: 0 !important; border: 0 !important; overflow: visible !important; }
 [class*="sidebar_"] > *:not([class*="panels_"]) { display: none !important; }
-[class*="panels_"] { position: fixed !important; left: 12px; bottom: 12px; width: 300px; z-index: 50; }
+[class*="panels_"] { display: contents !important; }
+[class*="panels_"] > div { position: fixed !important; z-index: 9999; background: #000 !important; border: 1px solid #2a2a2a !important; border-radius: 999px !important; margin: 0 !important; overflow: hidden; }
+/* voice connection: stays bottom-left */
+[class*="panels_"] > div:not(#vc-spotify-player):not(:has([class*="avatarWrapper_"])) { left: 12px; bottom: 12px; width: 280px; border-radius: 16px !important; }
+/* user profile: top bar, right after back/forward arrows */
+[class*="panels_"] > div:has([class*="avatarWrapper_"]) { top: 2px; left: 104px; height: 32px; width: 230px; display: flex; align-items: center; }
+[class*="panels_"] > div:has([class*="avatarWrapper_"]) > * { height: 32px; min-height: 0; padding: 0 6px; background: transparent !important; }
+/* music player: compact, top bar centre */
+#vc-spotify-player { top: 2px; left: 50%; transform: translateX(-50%); height: 32px; width: 420px; display: flex !important; align-items: center; padding: 0 10px !important; gap: 10px; }
+#vc-spotify-player img, #vc-spotify-player [class*="cover"] { width: 24px !important; height: 24px !important; border-radius: 50% !important; flex: none; }
+#vc-spotify-player [class*="progress"], #vc-spotify-player [class*="Progress"] { display: none !important; }
+#vc-spotify-player [class*="info"], #vc-spotify-player [class*="Info"] { flex: 1; min-width: 0; font-family: "Space Mono", monospace; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#vc-spotify-player button { background: transparent !important; width: 24px; height: 24px; padding: 0; }
+
+/* Ctrl+K quick switcher: Glyph wheel look */
+[class*="quickswitcher_"] { background: #000 !important; border: 1px solid #2a2a2a !important; border-radius: 28px !important; box-shadow: 0 30px 80px rgba(0,0,0,.8) !important; overflow: hidden; }
+[class*="quickswitcher_"] [class*="input_"] { background: #0e0e0e !important; border: 1px solid #2a2a2a !important; border-radius: 999px !important; font-family: "Space Mono", monospace !important; color: #f2f2f2 !important; }
+[class*="quickswitcher_"] [class*="scroller_"] { mask-image: linear-gradient(transparent, #000 8%, #000 92%, transparent); -webkit-mask-image: linear-gradient(transparent, #000 8%, #000 92%, transparent); }
+[class*="quickswitcher_"] [class*="result_"], [class*="quickswitcher_"] [class*="match_"] { background: transparent !important; border-radius: 999px !important; color: #4a4a4a !important; font-family: "Doto", "Space Mono", monospace !important; font-weight: 800 !important; font-size: 20px !important; transition: color .2s; }
+[class*="quickswitcher_"] [class*="selected_"] { color: #f2f2f2 !important; font-size: 30px !important; background: #0e0e0e !important; }
+[class*="quickswitcher_"] [class*="selected_"]::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #d71921; margin-right: 12px; flex: none; }
+[class*="quickswitcher_"] [class*="note_"], [class*="quickswitcher_"] [class*="protip_"] { font-family: "Space Mono", monospace !important; font-size: 10px !important; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4a !important; }
 `;
 
 const lazy = () => (window as any).Vencord?.Webpack;
