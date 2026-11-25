@@ -247,7 +247,7 @@ class Menu {
         this.wheel.className = "nc-wheel";
         const foot = document.createElement("div");
         foot.className = "nc-foot";
-        foot.textContent = "↑↓ move   ↵ open   ⌫ back   ctrl+d fav   esc close";
+        foot.textContent = "↑↓ move   ↵ open   ⌫ back   ctrl/alt+d fav   esc close";
         this.input.placeholder = "search";
         this.input.spellcheck = false;
         this.panel.append(head, this.input, this.wheel, foot);
@@ -387,7 +387,7 @@ class Menu {
             return true;
         }
         if (!this.isOpen) return false;
-        if (e.ctrlKey && !e.altKey && e.key.toLowerCase() === "d") {
+        if ((e.ctrlKey || e.altKey) && !e.metaKey && (e.code === "KeyD" || e.key.toLowerCase() === "d")) {
             const en = this.view[this.sel];
             if (en && en.id !== "home") {
                 toggleFav(en.id);
@@ -456,7 +456,7 @@ function init() {
             }
             if (menu.key(e)) {
                 e.preventDefault();
-                e.stopPropagation();
+                e.stopImmediatePropagation();
             }
         },
         true
