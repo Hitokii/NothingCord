@@ -15,7 +15,25 @@ interface Entry {
     dot?: "on" | "dnd" | "idle" | "off";
     run: () => void;
     open?: () => Entry[]; // drill-down: returns children instead of running
+    unread?: () => { n: number; dot: boolean };
 }
+
+const FAV_KEY = "nc-favs";
+const favs = (): Set<string> => {
+    try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) ?? "[]")); } catch { return new Set(); }
+};
+const toggleFav = (id: string) => {
+    const s = favs();
+    if (!s.delete(id)) s.add(id);
+    localStorage.setItem(FAV_KEY, JSON.stringify([...s]));
+};
+const readOf = (store: string, id: string) => () => {
+    try {
+        const st = (window as any).Vencord?.Webpack?.findStore?.(store);
+        const n = st?.getMentionCount?.(id) ?? 0;
+        return { n, dot: !n && !!st?.hasUnread?.(id) };
+    } catch { return { n: 0, dot: false }; }
+};
 
 const css = `
 #nc-menu { position: fixed; left: 0; right: 0; z-index: 99999; display: flex; justify-content: center; pointer-events: none; }
@@ -48,6 +66,8 @@ const css = `
 #nc-menu .nc-row .nc-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: #4a4a4a; }
 #nc-menu .nc-row .nc-dot.on { background: #f2f2f2; } #nc-menu .nc-row .nc-dot.dnd { background: #d71921; } #nc-menu .nc-row .nc-dot.idle { background: #8c8c8c; }
 #nc-menu .nc-row.sel::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: #d71921; flex: none; }
+#nc-menu .nc-row .nc-badge { width: 12px; height: 12px; border-radius: 50%; background: #d71921; flex: none; }
+#nc-menu .nc-row .nc-badge.num { width: auto; min-width: 12px; height: auto; padding: 2px 8px; border-radius: 999px; font: 700 14px "Space Mono", monospace; color: #fff; }
 #nc-menu .nc-empty { position: absolute; inset: 0; display: grid; place-items: center; font-family: "Space Mono", monospace; font-size: 12px; letter-spacing: .1em; color: #4a4a4a; text-transform: uppercase; }
 #nc-menu .nc-foot { display: flex; gap: 18px; font-family: "Space Mono", monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4a; }
 
@@ -139,6 +159,7 @@ function servers(): Entry[] {
         out.push({
             id,
             name: g.name,
+            unread: readOf("GuildReadStateStore", id),
             run: () => go(`/channels/${id}`),
             open: () => {
                 const chans: any[] = GuildChannelStore.getSelectableChannels(id) ?? [];
@@ -156,6 +177,7 @@ function servers(): Entry[] {
                             id: ch.id,
                             name: (voice ? "~ " : "# ") + ch.name,
                             sub: voice ? `${g.name} · voice` : g.name,
+                            unread: readOf("ReadStateStore", ch.id),
                             run: () => {
                                 go(`/channels/${id}/${ch.id}`);
                                 if (voice) lazy()?.findByProps?.("selectVoiceChannel")?.selectVoiceChannel(ch.id);
@@ -184,7 +206,7 @@ function friends(): Entry[] {
         const name = isGroup
             ? ch.name || ch.recipients.map((r: string) => UserStore.getUser(r)?.globalName ?? UserStore.getUser(r)?.username).join(", ")
             : u?.globalName ?? u?.username ?? "unknown";
-        out.push({ id: ch.id, name, sub: isGroup ? "group" : u?.username, dot: u ? status(u.id) : undefined, run: () => go(`/channels/@me/${ch.id}`) });
+        out.push({ id: ch.id, name, sub: isGroup ? "group" : u?.username, dot: u ? status(u.id) : undefined, unread: readOf("ReadStateStore", ch.id), run: () => go(`/channels/@me/${ch.id}`) });
     }
     for (const uid of RelationshipStore?.getFriendIDs?.() ?? []) {
         if (seen.has(uid)) continue;
@@ -225,7 +247,7 @@ class Menu {
         this.wheel.className = "nc-wheel";
         const foot = document.createElement("div");
         foot.className = "nc-foot";
-        foot.textContent = "↑↓ move   ↵ open   ⌫ back   esc close";
+        foot.textContent = "↑↓ move   ↵ open   ⌫ back   ctrl+d fav   esc close";
         this.input.placeholder = "search";
         this.input.spellcheck = false;
         this.panel.append(head, this.input, this.wheel, foot);
@@ -257,10 +279,11 @@ class Menu {
 
     filter() {
         const q = this.input.value.trim().toLowerCase();
+        const fv = favs();
         this.view = this.items
             .map(e => ({ e, s: Math.max(fz(e.name, q), q ? fz(e.sub ?? "", q) / 2 : 0) }))
             .filter(x => x.s > 0)
-            .sort((a, b) => (q ? b.s - a.s : 0))
+            .sort((a, b) => (fv.has(b.e.id) ? 1 : 0) - (fv.has(a.e.id) ? 1 : 0) || (q ? b.s - a.s : 0))
             .map(x => x.e);
         this.sel = Math.min(this.sel, Math.max(0, this.view.length - 1));
         this.render(true);
@@ -285,8 +308,15 @@ class Menu {
                 }
                 const n = document.createElement("span");
                 n.className = "nc-name";
-                n.textContent = en.name;
+                n.textContent = (favs().has(en.id) ? "★ " : "") + en.name;
                 r.append(n);
+                const u = en.unread?.();
+                if (u && (u.n || u.dot)) {
+                    const b = document.createElement("span");
+                    b.className = u.n ? "nc-badge num" : "nc-badge";
+                    b.textContent = u.n ? String(u.n > 99 ? "99+" : u.n) : "";
+                    r.append(b);
+                }
                 if (en.sub) {
                     const s = document.createElement("span");
                     s.className = "nc-sub";
@@ -357,6 +387,14 @@ class Menu {
             return true;
         }
         if (!this.isOpen) return false;
+        if (e.ctrlKey && !e.altKey && e.key.toLowerCase() === "d") {
+            const en = this.view[this.sel];
+            if (en && en.id !== "home") {
+                toggleFav(en.id);
+                this.filter();
+            }
+            return true;
+        }
         switch (e.key) {
             case "Escape": this.hide(); return true;
             case "ArrowDown": this.move(1); return true;
