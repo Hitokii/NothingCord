@@ -292,10 +292,11 @@ class Menu {
     filter() {
         const q = this.input.value.trim().toLowerCase();
         const fv = favs();
+        const hot = (e: Entry) => { const u = e.unread?.(); return u && (u.n || u.dot) ? 1 : 0; };
         this.view = this.items
-            .map(e => ({ e, s: Math.max(fz(e.name, q), q ? fz(e.sub ?? "", q) / 2 : 0) }))
+            .map(e => ({ e, s: Math.max(fz(e.name, q), q ? fz(e.sub ?? "", q) / 2 : 0), h: hot(e) }))
             .filter(x => x.s > 0)
-            .sort((a, b) => (fv.has(b.e.id) ? 1 : 0) - (fv.has(a.e.id) ? 1 : 0) || (q ? b.s - a.s : 0))
+            .sort((a, b) => b.h - a.h || (fv.has(b.e.id) ? 1 : 0) - (fv.has(a.e.id) ? 1 : 0) || (q ? b.s - a.s : 0))
             .map(x => x.e);
         this.sel = Math.min(this.sel, Math.max(0, this.view.length - 1));
         this.render(true);
