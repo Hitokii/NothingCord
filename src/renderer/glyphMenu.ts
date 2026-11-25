@@ -19,13 +19,25 @@ interface Entry {
 }
 
 const FAV_KEY = "nc-favs";
+// Discord deletes window.localStorage, so borrow one from an iframe
+let store: Storage | undefined;
+const ls = (): Storage | undefined => {
+    if (store) return store;
+    try {
+        const f = document.createElement("iframe");
+        f.style.display = "none";
+        document.documentElement.append(f);
+        store = f.contentWindow?.localStorage;
+    } catch {}
+    return store;
+};
 const favs = (): Set<string> => {
-    try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) ?? "[]")); } catch { return new Set(); }
+    try { return new Set(JSON.parse(ls()?.getItem(FAV_KEY) ?? "[]")); } catch { return new Set(); }
 };
 const toggleFav = (id: string) => {
     const s = favs();
     if (!s.delete(id)) s.add(id);
-    localStorage.setItem(FAV_KEY, JSON.stringify([...s]));
+    try { ls()?.setItem(FAV_KEY, JSON.stringify([...s])); } catch {}
 };
 const readOf = (store: string, id: string) => () => {
     try {
