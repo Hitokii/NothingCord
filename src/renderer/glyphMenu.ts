@@ -296,7 +296,11 @@ class Menu {
         this.view = this.items
             .map(e => ({ e, s: Math.max(fz(e.name, q), q ? fz(e.sub ?? "", q) / 2 : 0), h: hot(e) }))
             .filter(x => x.s > 0)
-            .sort((a, b) => b.h - a.h || (fv.has(b.e.id) ? 1 : 0) - (fv.has(a.e.id) ? 1 : 0) || (q ? b.s - a.s : 0))
+            .sort((a, b) => {
+                const f = (fv.has(b.e.id) ? 1 : 0) - (fv.has(a.e.id) ? 1 : 0);
+                const o = this.kind === "servers" && !this.stack.length ? [f, b.h - a.h] : [b.h - a.h, f];
+                return o[0] || o[1] || (q ? b.s - a.s : 0);
+            })
             .map(x => x.e);
         this.sel = Math.min(this.sel, Math.max(0, this.view.length - 1));
         this.render(true);
